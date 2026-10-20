@@ -1,6 +1,6 @@
 [package]
-name = "mypkg"
-version = "0.1.0"
-description = "One line saying what the package does"
+name = "crypto"
+version = "1.0.0"
+description = "Authenticated encryption (ChaCha20-Poly1305, AES-256-GCM), Ed25519 signatures, X25519 key exchange, HKDF and Argon2id password hashing, on libsodium"
 license = "Apache-2.0"
-repository = "https://github.com/OWNER/pepper-mypkg"
+repository = "https://github.com/pep-lang/pepper-crypto"
