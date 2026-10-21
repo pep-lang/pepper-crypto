@@ -127,9 +127,10 @@ runs the `[Test]` functions in `tests/` with `pepper test`, against the
 published test vectors: RFC 8439 for ChaCha20-Poly1305, the GCM
 specification's test cases 14 and 16 for AES-256-GCM
 (`aead_test.pep`), RFC 8032 for Ed25519 (`sign_test.pep`), RFC 7748 for
-X25519 (`key_exchange_test.pep`) and RFC 5869 for HKDF (`kdf_test.pep`),
-plus tamper tests (a flipped bit must fail to open or verify) and password
-hashing (`password_test.pep`). On Windows, set `PEPPER_LIBRARY_PATH` first
+X25519 (`key_exchange_test.pep`), RFC 5869 for HKDF (`kdf_test.pep`)
+and encoded Argon2id hashes from the Argon2 reference implementation's
+tests (`password_test.pep`), plus tamper tests (a flipped bit must fail
+to open or verify) and password hashing round trips. On Windows, set `PEPPER_LIBRARY_PATH` first
 (see above).
 
 ## Releasing
