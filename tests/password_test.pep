@@ -3,7 +3,7 @@ import crypto;
 [Test]
 a_password_verifies_against_its_hash() {
     var stored = crypto.hash_password("correct horse battery staple").value();
-    expect_true(stored.starts_with("$argon2id$"));
+    expect_true(stored.starts_with("$argon2id$v=19$m=65536,t=2,p=1$"));
     expect_true(crypto.verify_password("correct horse battery staple", stored));
     expect_false(crypto.verify_password("correct horse battery stapler", stored));
 }
