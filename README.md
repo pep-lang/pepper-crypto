@@ -31,7 +31,7 @@ One module, **`crypto`**:
   encoded)`**: Argon2id, in the standard `$argon2id$...` encoded form,
   which holds its salt and cost.
 - **`random_bytes(count)`**: the system's secure random bytes.
-- **`version()`**: the libsodium version linked.
+- **`version()`**: the bundled libsodium's version.
 
 ```pepper
 import crypto;
@@ -66,24 +66,30 @@ main(): int {
 }
 ```
 
-## Installing libsodium
+## Which libsodium
 
-The package links the system's libsodium, 1.0.18 or later, rather than
-building its own copy:
+The package bundles libsodium **1.0.22**: its C sources, unchanged from
+the signed release tarball, in `native/sodium/`, whose `VERSION` file
+records the download, its SHA-256 and signature, and which files were
+copied. The `[native]` table in `pep.toml` compiles it into every program
+that uses the package, on every system and for every `--target`, so
+nothing needs installing, and a system libsodium is never used.
 
-- **Linux:** `libsodium.so`, from the distribution's development package
-  (`apt install libsodium-dev`, `dnf install libsodium-devel`).
-- **macOS:** Homebrew's (`brew install libsodium`); the package looks in
-  `/opt/homebrew/lib` and `/usr/local/lib`.
-- **Windows:** the static `libsodium.lib` from vcpkg
-  (`vcpkg install libsodium:x64-windows-static`). Put its folder on
-  `PEPPER_LIBRARY_PATH`:
+- It is built as upstream builds it: `-O3` (in debug builds too), with
+  the macros upstream's `build.zig` sets in place of its configure script.
+  On x64 it has the SSE, AVX2 and AES-NI code and on ARM64 the ARM crypto
+  code, which libsodium picks at run time when the CPU has it.
+- Those compiler flags mean `--no-build-scripts` (or
+  `PEPPER_NO_BUILD_SCRIPTS`) refuses to build the package, as it refuses
+  any dependency's `[native]` flags.
+- The first build compiles libsodium's 141 C files, which takes a while
+  (about 25 seconds on a desktop); the objects are kept in the project's
+  `.pep/build/`, so later builds reuse them.
+- `crypto.version()` says which version is built in.
 
-  ```sh
-  set PEPPER_LIBRARY_PATH=C:\vcpkg\installed\x64-windows-static\lib
-  ```
-
-`crypto.version()` says which version the program runs against.
+To move to a newer libsodium, check the new tarball's minisign signature,
+replace `native/sodium/` with the same files from it (see `VERSION`),
+update `VERSION`, and the version that `tests/aead_test.pep` expects.
 
 ## Limits
 
@@ -114,8 +120,10 @@ which writes
 crypto = { github = "pep-lang/pepper-crypto" }
 ```
 
-Without a project, put a folder named `crypto` that holds (or links to)
-this repository on the import path: `pepper build -I packages main.pep`.
+It needs Pepper 0.11.0 or later (`minimum_toolchain`), which builds
+`[native]` C. Use it as a dependency of a project: a folder passed with
+`-I` is only searched for modules, so its libsodium would not be built
+and the program would not link.
 
 ## Tests
 
@@ -127,11 +135,13 @@ runs the `[Test]` functions in `tests/` with `pepper test`, against the
 published test vectors: RFC 8439 for ChaCha20-Poly1305, the GCM
 specification's test cases 14 and 16 for AES-256-GCM
 (`aead_test.pep`), RFC 8032 for Ed25519 (`sign_test.pep`), RFC 7748 for
-X25519 (`key_exchange_test.pep`), RFC 5869 for HKDF (`kdf_test.pep`)
-and encoded Argon2id hashes from the Argon2 reference implementation's
-tests (`password_test.pep`), plus tamper tests (a flipped bit must fail
-to open or verify) and password hashing round trips. On Windows, set `PEPPER_LIBRARY_PATH` first
-(see above).
+X25519, the iterated test included (`key_exchange_test.pep`), RFC 5869
+for HKDF (`kdf_test.pep`) and encoded Argon2id hashes from the Argon2
+reference implementation's tests (`password_test.pep`). Both AEADs are
+also checked on a 1037-byte message against another implementation
+(Windows CNG), which runs their bulk SIMD code, and the version test
+pins the bundled 1.0.22. Tamper tests check that a flipped bit fails to
+open or verify, and round trips cover password hashing.
 
 ## Releasing
 
@@ -144,5 +154,5 @@ package update` find versions by their tags.
 
 ## License
 
-Apache-2.0; see [LICENSE](LICENSE). libsodium is under the ISC license
-and is not part of this repository; see [NOTICE](NOTICE).
+Apache-2.0; see [LICENSE](LICENSE). The bundled libsodium is under the
+ISC license; see [NOTICE](NOTICE).

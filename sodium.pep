@@ -4,44 +4,15 @@
 ## types: `unsigned char*` is `u8*`, `unsigned long long` and `size_t` are
 ## `ulong`.
 ##
-## Which library is linked, per platform:
-##
-## - **Linux:** `libsodium.so` (`apt install libsodium-dev`).
-## - **macOS:** `libsodium.dylib` from Homebrew (`brew install libsodium`),
-##   found in `/opt/homebrew/lib` or `/usr/local/lib`.
-## - **Windows:** the static `libsodium.lib` (`vcpkg install
-##   libsodium:x64-windows-static`), whose folder goes on
-##   `PEPPER_LIBRARY_PATH`; it also needs `advapi32` for its random numbers.
+## The library is the copy in `native/sodium/`, which `[native]` in
+## `pep.toml` builds into the program.
 
-# The [Link]s on sodium_init and sodium_library_version_major link the
-# library for every program that imports the module; the second carries
-# what one attribute cannot: advapi32 on Windows, Intel Homebrew's folder
-# on macOS.
-
-[Target(OS(Windows))]
-[Link("libsodium")]
 extern int sodium_init();
-[Target(OS(Windows))]
-[Link("advapi32")]
-extern int sodium_library_version_major();
-
-[Target(OS(Mac))]
-[Link(lib = "sodium", path = "/opt/homebrew/lib")]
-extern int sodium_init();
-[Target(OS(Mac))]
-[Link(lib = "sodium", path = "/usr/local/lib")]
-extern int sodium_library_version_major();
-
-[Target(!OS(Windows) && !OS(Mac))]
-[Link("sodium")]
-extern int sodium_init();
-
 extern void* malloc(ulong size);
 extern void free(void* p);
 
 extern char* sodium_version_string();
 extern void sodium_memzero(void* p, ulong size);
-extern int sodium_memcmp(void* a, void* b, ulong size);
 extern void randombytes_buf(void* buffer, ulong size);
 
 extern int crypto_aead_chacha20poly1305_ietf_encrypt(

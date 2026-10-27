@@ -4,3 +4,62 @@ version = "1.0.1"
 description = "Authenticated encryption (ChaCha20-Poly1305, AES-256-GCM), Ed25519 signatures, X25519 key exchange, HKDF and Argon2id password hashing, on libsodium"
 license = "Apache-2.0"
 repository = "https://github.com/pep-lang/pepper-crypto"
+# 0.11 added `[native]`, which builds the bundled libsodium.
+minimum_toolchain = "0.11.0"
+
+# libsodium, built into every program that uses the package
+# (native/sodium/VERSION says which release), with the macros upstream's
+# build.zig sets in place of its configure script.
+[native]
+sources = ["native/sodium/src/libsodium/**/*.c"]
+include = ["native/sodium/src/libsodium/include/sodium"]
+defines = ["CONFIGURED=1", "SODIUM_STATIC=1", "NATIVE_LITTLE_ENDIAN=1", "HAVE_TI_MODE=1"]
+# Upstream's flags: optimized as its configure script builds it, in debug
+# builds too, and without the aliasing and overflow assumptions its code
+# is not written for. -Wno-pointer-sign quiets the AES-NI code's
+# `_mm_prefetch` calls, which pass `unsigned char*` where Windows declares
+# `char*`.
+flags = ["-O3", "-fno-strict-aliasing", "-fno-strict-overflow", "-fwrapv", "-Wno-pointer-sign"]
+
+# The SSE, AVX2 and AES-NI code, which libsodium picks at run time when the
+# CPU has it.
+[target.'Arch(x64)'.native]
+defines = [
+    "HAVE_CPUID=1",
+    "HAVE_MMINTRIN_H=1",
+    "HAVE_EMMINTRIN_H=1",
+    "HAVE_PMMINTRIN_H=1",
+    "HAVE_TMMINTRIN_H=1",
+    "HAVE_SMMINTRIN_H=1",
+    "HAVE_AVXINTRIN_H=1",
+    "HAVE_AVX2INTRIN_H=1",
+    "HAVE_AVX512FINTRIN_H=1",
+    "HAVE_WMMINTRIN_H=1",
+    "HAVE_RDRAND=1",
+]
+
+# The ARM AES and SHA-3 instructions, likewise.
+[target.'Arch(aarch64)'.native]
+defines = ["HAVE_ARMCRYPTO=1"]
+
+[target.'!OS(Windows)'.native]
+defines = [
+    "TLS=_Thread_local",
+    "HAVE_PTHREAD=1",
+    "HAVE_SYS_MMAN_H=1",
+    "HAVE_MMAP=1",
+    "HAVE_MLOCK=1",
+    "HAVE_MPROTECT=1",
+    "HAVE_MADVISE=1",
+    "HAVE_POSIX_MEMALIGN=1",
+    "HAVE_WEAK_SYMBOLS=1",
+]
+
+# getauxval, which tells libsodium whether an ARM CPU has the AES
+# instructions that AES-256-GCM needs.
+[target.'OS(Linux)'.native]
+defines = ["HAVE_SYS_AUXV_H=1"]
+
+# RtlGenRandom, libsodium's random source on Windows.
+[target.'OS(Windows)'.native]
+link = ["advapi32"]

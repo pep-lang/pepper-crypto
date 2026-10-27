@@ -1,0 +1,21 @@
+libsodium 1.0.22, unchanged, from
+https://download.libsodium.org/libsodium/releases/libsodium-1.0.22.tar.gz
+(the same file as the libsodium-1.0.22.tar.gz asset of
+https://github.com/jedisct1/libsodium/releases/tag/1.0.22-RELEASE)
+
+SHA-256 of the tarball:
+adbdd8f16149e81ac6078a03aca6fc03b592b89ef7b5ed83841c086191be3349
+
+Its minisign signature (libsodium-1.0.22.tar.gz.minisig) verifies under
+libsodium's release key:
+RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3
+
+What is copied from the tarball:
+- every .c and .h file under src/libsodium/, at the same path;
+- LICENSE;
+- builds/msvc/version.h, as src/libsodium/include/sodium/version.h, where
+  upstream's build.zig copies it (configure generates that file from
+  version.h.in otherwise).
+
+Nothing else, and nothing is edited. The assembly (.S) files are left out:
+they need HAVE_AMD64_ASM, which pep.toml does not set.

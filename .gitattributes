@@ -1,0 +1,3 @@
+# The vendored libsodium stays byte for byte as released, so it can be
+# compared against the tarball.
+native/sodium/** -text linguist-vendored
