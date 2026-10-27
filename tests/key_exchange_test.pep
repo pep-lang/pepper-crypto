@@ -19,6 +19,33 @@ x25519_matches_rfc7748() {
     expect_equal(digest.to_hex(bob.shared_secret(_hex(_ALICE_PUBLIC)).value()), _SHARED);
 }
 
+# RFC 7748, section 5.2: the first vector, and the iterated test after 1
+# and 1000 rounds, which walks the field arithmetic through many values.
+[Test]
+x25519_matches_rfc7748_function_vectors() {
+    var scalar = crypto.X25519SecretKey.from_bytes(
+        _hex("a546e36bf0527c9d3b16154b82465edd62144c0ac1fc5a18506a2244ba449ac4")
+    ).value();
+    expect_equal(
+        digest.to_hex(
+            scalar.shared_secret(_hex("e6db6867583030db3594c1a424b15f7c726624ec26b3353b10a903a6d0ab1c4c")).value()
+        ),
+        "c3da55379de9c6908e94ea4df28d084f32eccf03491c71f754b4075577a28552"
+    );
+
+    var k = _hex("0900000000000000000000000000000000000000000000000000000000000000");
+    var u = k.copy();
+    for (var round in 1..1001) {
+        var next = crypto.X25519SecretKey.from_bytes(k).value().shared_secret(u).value();
+        u = k;
+        k = next;
+        if (round == 1) {
+            expect_equal(digest.to_hex(k), "422c8e7a6227d7bca1350b3e2bb7279f7897b87bb6854b783c60e80311ae3079");
+        }
+    }
+    expect_equal(digest.to_hex(k), "684cf59ba83309552800ef566f2f4d3c1c3887c49360e3875f2eb94d99532c51");
+}
+
 [Test]
 generated_keys_agree() {
     var alice = crypto.X25519SecretKey.generate();

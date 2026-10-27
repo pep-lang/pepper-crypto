@@ -1,12 +1,11 @@
 ## Authenticated encryption, signatures, key exchange, key derivation and
 ## password hashing, on libsodium.
 ##
-## Bring it in with `import crypto`. It links the system's libsodium
-## (1.0.18 or later): `apt install libsodium-dev` on Linux,
-## `brew install libsodium` on macOS, and on Windows
-## `vcpkg install libsodium:x64-windows-static` with that triplet's
-## `lib` folder on `PEPPER_LIBRARY_PATH`. Keys, nonces and data are byte
-## arrays (`u8[]`); a call that can fail returns a `Result`.
+## Bring it in with `import crypto`, as a dependency of a project: the
+## package bundles libsodium 1.0.22, which the build compiles into the
+## program (a `[native]` table), so there is nothing to install. Keys,
+## nonces and data are byte arrays (`u8[]`); a call that can fail returns
+## a `Result`.
 ##
 ## - `ChaCha20Poly1305`, `Aes256Gcm`: AEAD; `seal` picks a random nonce and
 ##   `open` fails on any change
@@ -51,9 +50,9 @@ export hkdf_sha256;
 export hash_password;
 export verify_password;
 
-## Returns the version of the libsodium the program runs against.
+## Returns the version of the bundled libsodium.
 ##
-## @returns the version, such as `"1.0.20"`
+## @returns the version, such as `"1.0.22"`
 export version(): String {
     return String(sodium_version_string());
 }

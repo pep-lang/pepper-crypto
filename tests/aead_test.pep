@@ -139,9 +139,59 @@ random_bytes_differ() {
     expect_true(digest.to_hex(a) != digest.to_hex(crypto.random_bytes(32)));
 }
 
+# A 1037-byte message and 300 bytes of associated data, long enough for
+# the bulk SIMD paths, sealed under key 00..1f and nonce a0..ab. The
+# expected SHA-256s of ciphertext and tag come from another implementation,
+# Windows CNG (.NET's ChaCha20Poly1305 and AesGcm).
+_long_message(): u8[] {
+    var bytes = Array<u8>();
+    for (var i in 0..1037) {
+        bytes.append(((i * 7 + 3) % 256) as u8);
+    }
+    return bytes;
+}
+
+_long_associated_data(): u8[] {
+    var bytes = Array<u8>();
+    for (var i in 0..300) {
+        bytes.append(((i * 13) % 256) as u8);
+    }
+    return bytes;
+}
+
+const _LONG_KEY = "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f";
+const _LONG_NONCE = "a0a1a2a3a4a5a6a7a8a9aaab";
+
+[Test]
+chacha20_poly1305_matches_another_implementation_on_a_long_message() {
+    var cipher = crypto.ChaCha20Poly1305.from_key(_hex(_LONG_KEY)).value();
+    var sealed = cipher.seal_with_nonce(_hex(_LONG_NONCE), _long_message(), _long_associated_data()).value();
+    expect_equal(
+        digest.to_hex(digest.sha256(sealed)), "3b714ae55912e9ef0207315353afcf9ddba94a58f428e3a8888745f6f40d4fe1"
+    );
+    var opened = cipher.open_with_nonce(_hex(_LONG_NONCE), sealed, _long_associated_data()).value();
+    expect_equal(digest.to_hex(opened), digest.to_hex(_long_message()));
+}
+
+[Test]
+aes256_gcm_matches_another_implementation_on_a_long_message() {
+    if (!crypto.Aes256Gcm.is_available()) {
+        print("skipped: no AES-256-GCM instructions on this CPU");
+        return;
+    }
+    var cipher = crypto.Aes256Gcm.from_key(_hex(_LONG_KEY)).value();
+    var sealed = cipher.seal_with_nonce(_hex(_LONG_NONCE), _long_message(), _long_associated_data()).value();
+    expect_equal(
+        digest.to_hex(digest.sha256(sealed)), "1db34b64d798e1d7d6325986b5badcc2393554fc9d5b3c9c9870ce0e46b2ae4a"
+    );
+    var opened = cipher.open_with_nonce(_hex(_LONG_NONCE), sealed, _long_associated_data()).value();
+    expect_equal(digest.to_hex(opened), digest.to_hex(_long_message()));
+}
+
+# The bundled copy (native/sodium/VERSION), not a system library.
 [Test]
 reports_the_library_version() {
-    expect_true(crypto.version().starts_with("1."));
+    expect_equal(crypto.version(), "1.0.22");
 }
 
 [Test]
