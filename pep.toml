@@ -55,6 +55,11 @@ defines = [
     "HAVE_WEAK_SYMBOLS=1",
 ]
 
+# getauxval, which tells libsodium whether an ARM CPU has the AES
+# instructions that AES-256-GCM needs.
+[target.'OS(Linux)'.native]
+defines = ["HAVE_SYS_AUXV_H=1"]
+
 # RtlGenRandom, libsodium's random source on Windows.
 [target.'OS(Windows)'.native]
 link = ["advapi32"]

@@ -13,7 +13,6 @@ extern void free(void* p);
 
 extern char* sodium_version_string();
 extern void sodium_memzero(void* p, ulong size);
-extern int sodium_memcmp(void* a, void* b, ulong size);
 extern void randombytes_buf(void* buffer, ulong size);
 
 extern int crypto_aead_chacha20poly1305_ietf_encrypt(
